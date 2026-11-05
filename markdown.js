@@ -53,7 +53,9 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   function addComment(element, comment, inputContainer) {
-    if (comment) {
+    // Enter and blur can both fire; only finalize a live input once.
+    if (!inputContainer || !inputContainer.parentNode) return;
+    if (comment.trim()) {
       const commentNode = document.createElement('div');
       commentNode.className = 'comment';
       commentNode.innerText = comment;
@@ -61,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     // 移除输入框
     if (inputContainer) {
-      element.removeChild(inputContainer);
+      inputContainer.remove();
     }
   }
 
@@ -77,11 +79,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // 收集所有标题、段落和评论
     document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li').forEach(function(element) {
+      // Nested comments are already present in outerHTML; do not export twice.
+      if (element.parentElement && element.parentElement.closest('h1, h2, h3, h4, h5, h6, p, li')) return;
       content += element.outerHTML + '\n';
-      const comments = element.querySelectorAll('.comment');
-      comments.forEach(function(comment) {
-        content += comment.outerHTML + '\n';
-      });
     });
 
     // 创建一个 Blob 对象，并生成下载链接
